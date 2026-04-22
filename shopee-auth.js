@@ -1,11 +1,12 @@
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
 // DADOS DE PRODUÇÃO SHOPEE ADS
 const partner_id = '2033230';
 const partner_key = 'shpk7150797956504a58504e63695579496a6e4675696e54497357485656596f';
 const shop_id = '1005930564';
-const redirect_url = 'https://b8c8a8daf92ddf.lhr.life';
+const redirect_url = process.env.SHOPEE_REDIRECT_URL || 'https://backend.pwsuplementos.com.br';
 const base_url = 'https://partner.shopeemobile.com';
 const path = '/api/v2/shop/auth_partner';
 const timestamp = Math.floor(Date.now() / 1000);

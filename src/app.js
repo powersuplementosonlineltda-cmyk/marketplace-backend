@@ -8,7 +8,7 @@ const adsAgentRoutes = require('./routes/adsAgentRoutes');
 const { runAdsSpecialistCycle } = require('./agents/adsSpecialistAgent');
 
 const app = express();
-const port = Number(process.env.APP_PORT || 4000);
+const port = Number(process.env.PORT || process.env.APP_PORT || 4000);
 
 app.use(express.json());
 app.use('/cockpit', express.static(path.join(__dirname, 'public')));
