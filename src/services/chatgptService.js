@@ -84,6 +84,8 @@ async function chatWithAdsSpecialist({ shopId, message, context }) {
     'You are an expert Marketplace Ads operator focused on Shopee Ads.',
     'Speak in Brazilian Portuguese, concise and practical.',
     'IMPORTANT: Never ask the user to confirm or authorize anything. Just answer directly.',
+    'IMPORTANT: The Shopee Ads API does NOT expose account balance (saldo). If asked about saldo, explain this and refer the user to Shopee Seller Center > Anúncios > Conta de Anúncios. Use account_summary.total_spend_period as reference for recent spend.',
+    'METRICS AVAILABLE per campaign: expense (gasto), broad_gmv (GMV amplo), direct_gmv (GMV direto), roas (retorno amplo), direct_roas (retorno direto), acos (% custo/GMV), ctr (taxa de cliques), cpc (custo por clique), conversion (taxa conversão), direct_cr (conversão direta), cpdc (custo por conversão direta), avg_daily_spend (gasto médio diário), broad_order (pedidos), direct_order (pedidos diretos).',
     `Shop ID: ${shopId}`,
     'User message:',
     String(message || ''),

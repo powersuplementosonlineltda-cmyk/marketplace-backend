@@ -62,8 +62,12 @@ function aggregateCampaigns(rows) {
         expense: 0,
         broad_gmv: 0,
         broad_order: 0,
+        broad_order_amount: 0,
         direct_gmv: 0,
         direct_order: 0,
+        direct_order_amount: 0,
+        cpdc_sum: 0,
+        active_days: 0,
       });
     }
 
@@ -74,8 +78,12 @@ function aggregateCampaigns(rows) {
     c.expense += toNumber(metrics.expense);
     c.broad_gmv += toNumber(metrics.broad_gmv);
     c.broad_order += toNumber(metrics.broad_order);
+    c.broad_order_amount += toNumber(metrics.broad_order_amount);
     c.direct_gmv += toNumber(metrics.direct_gmv);
     c.direct_order += toNumber(metrics.direct_order);
+    c.direct_order_amount += toNumber(metrics.direct_order_amount);
+    c.cpdc_sum += toNumber(metrics.cpdc);
+    if (toNumber(metrics.impression) > 0) c.active_days += 1;
   });
 
   const campaigns = Array.from(byCampaign.values()).map((c) => {
@@ -84,7 +92,13 @@ function aggregateCampaigns(rows) {
     const roas = c.expense > 0 ? c.broad_gmv / c.expense : 0;
     const acos = c.broad_gmv > 0 ? (c.expense / c.broad_gmv) * 100 : 0;
     const conversion = c.clicks > 0 ? (c.broad_order / c.clicks) * 100 : 0;
-    return { ...c, ctr, cpc, roas, acos, conversion };
+    const direct_roas = c.expense > 0 ? c.direct_gmv / c.expense : 0;
+    const direct_acos = c.direct_gmv > 0 ? (c.expense / c.direct_gmv) * 100 : 0;
+    const direct_cr = c.clicks > 0 ? (c.direct_order / c.clicks) * 100 : 0;
+    const avg_daily_spend = c.active_days > 0 ? c.expense / c.active_days : 0;
+    const cpdc = c.direct_order > 0 ? c.expense / c.direct_order : 0;
+    const { cpdc_sum, ...rest } = c;
+    return { ...rest, ctr, cpc, roas, acos, conversion, direct_roas, direct_acos, direct_cr, avg_daily_spend, cpdc };
   });
 
   return campaigns;
@@ -623,15 +637,44 @@ async function chat({ shopId, message, days = 14 }) {
   const profile = (await getProfile(shopId))?.profile || buildProfile(campaigns);
   const actions = await listActions({ shopId, status: 'draft', limit: 20 });
 
+  const activeCampaigns = campaigns.filter((c) => c.expense > 0);
+  const totalSpend = campaigns.reduce((s, c) => s + c.expense, 0);
+  const totalGmv = campaigns.reduce((s, c) => s + c.broad_gmv, 0);
+  const totalOrders = campaigns.reduce((s, c) => s + c.broad_order, 0);
+  const totalDirectGmv = campaigns.reduce((s, c) => s + c.direct_gmv, 0);
+  const totalImpressions = campaigns.reduce((s, c) => s + c.impression, 0);
+  const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
+  const overallRoas = totalSpend > 0 ? totalGmv / totalSpend : 0;
+  const overallAcos = totalGmv > 0 ? (totalSpend / totalGmv) * 100 : 0;
+  const avgDailySpend = totalSpend > 0 && days > 0 ? totalSpend / days : 0;
+
   const context = {
     days,
     date_range: range,
     campaigns_count: campaigns.length,
+    active_campaigns_count: activeCampaigns.length,
     profile,
+    account_summary: {
+      total_spend_period: Number(totalSpend.toFixed(2)),
+      total_gmv_period: Number(totalGmv.toFixed(2)),
+      total_direct_gmv_period: Number(totalDirectGmv.toFixed(2)),
+      total_orders_period: totalOrders,
+      total_impressions_period: totalImpressions,
+      total_clicks_period: totalClicks,
+      overall_roas: Number(overallRoas.toFixed(2)),
+      overall_acos_pct: Number(overallAcos.toFixed(2)),
+      avg_daily_spend: Number(avgDailySpend.toFixed(2)),
+      note_saldo: 'Saldo da conta Shopee Ads nao esta disponivel via API para esta conta. Consulte o painel Shopee Seller Center > Anuncios > Conta de Anuncios para ver o saldo atual.',
+    },
     top_campaigns: campaigns
       .slice()
       .sort((a, b) => b.roas - a.roas)
       .slice(0, 10),
+    worst_campaigns: campaigns
+      .filter((c) => c.expense > 0)
+      .sort((a, b) => a.roas - b.roas)
+      .slice(0, 5),
+    zero_impression_campaigns: campaigns.filter((c) => c.impression === 0).length,
     draft_actions: actions,
   };
 
