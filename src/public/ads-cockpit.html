@@ -282,7 +282,7 @@
 
           <div class="row">
             <label for="apiBase">API Base URL</label>
-            <input id="apiBase" value="http://localhost:4001/api" />
+            <input id="apiBase" placeholder="https://backend.fluxaagency.com.br/api" />
           </div>
 
           <div class="row">
@@ -373,6 +373,18 @@
       document.getElementById('workflowExpected').textContent = WORKFLOW_FALLBACK;
 
       const $ = (id) => document.getElementById(id);
+
+      function inferApiBaseFromOrigin() {
+        if (window && window.location && window.location.origin && window.location.origin.startsWith('http')) {
+          return window.location.origin.replace(/\/$/, '') + '/api';
+        }
+        return 'http://localhost:4001/api';
+      }
+
+      const apiBaseInput = $('apiBase');
+      if (!apiBaseInput.value || apiBaseInput.value.includes('localhost:4001')) {
+        apiBaseInput.value = inferApiBaseFromOrigin();
+      }
 
       function setStatus(id, text, ok = null) {
         const el = $(id);
