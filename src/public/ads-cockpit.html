@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ads Agent Cockpit</title>
+    <style>
+      :root {
+        --bg: #f5f1e8;
+        --bg-alt: #fffdf8;
+        --ink: #1c1b18;
+        --muted: #6d6559;
+        --line: #d8cfbf;
+        --accent: #b14522;
+        --accent-2: #0f6f67;
+        --ok: #2b8a3e;
+        --warn: #bc6c25;
+        --danger: #b00020;
+        --card: #fffdf9cc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, #ffe6ca 0%, transparent 35%),
+          radial-gradient(circle at 90% 20%, #d0f0ea 0%, transparent 28%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 22px;
+      }
+
+      .hero {
+        border: 1px solid var(--line);
+        background: linear-gradient(120deg, #fff8eb 0%, #fff 45%, #eef9f8 100%);
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 10px 30px #00000010;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 3vw, 2.3rem);
+        letter-spacing: 0.02em;
+      }
+
+      .sub {
+        margin-top: 8px;
+        color: var(--muted);
+      }
+
+      .grid {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        grid-column: span 12;
+        border: 1px solid var(--line);
+        background: var(--card);
+        border-radius: 14px;
+        padding: 14px;
+        backdrop-filter: blur(2px);
+        animation: rise 0.35s ease both;
+      }
+
+      @media (min-width: 960px) {
+        .card.config {
+          grid-column: span 4;
+        }
+
+        .card.chat {
+          grid-column: span 8;
+        }
+
+        .card.actions {
+          grid-column: span 7;
+        }
+
+        .card.exec {
+          grid-column: span 5;
+        }
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      label {
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      input,
+      textarea,
+      select,
+      button {
+        font: inherit;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      button {
+        border: 1px solid transparent;
+        border-radius: 11px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: transform 0.16s ease, box-shadow 0.2s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px #00000014;
+      }
+
+      .btn-main {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn-alt {
+        background: var(--accent-2);
+        color: #fff;
+      }
+
+      .btn-line {
+        background: #fff;
+        color: var(--ink);
+        border-color: var(--line);
+      }
+
+      .actions-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .status {
+        margin-top: 8px;
+        padding: 9px 10px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .status.ok {
+        border-color: #b7e4c7;
+        background: #effaf3;
+        color: #194d2f;
+      }
+
+      .status.err {
+        border-color: #f2b8c6;
+        background: #fff1f4;
+        color: #7f112b;
+      }
+
+      .chat-log {
+        height: 300px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .msg {
+        margin-bottom: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        line-height: 1.35;
+        white-space: pre-wrap;
+      }
+
+      .msg.user {
+        background: #f6ede2;
+        border: 1px solid #efddc6;
+      }
+
+      .msg.agent {
+        background: #ebf6f4;
+        border: 1px solid #cee9e5;
+      }
+
+      .list {
+        max-height: 360px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .action-item {
+        padding: 10px;
+        border-bottom: 1px solid #f0eadf;
+      }
+
+      .action-item:last-child {
+        border-bottom: 0;
+      }
+
+      .pill {
+        font-size: 0.75rem;
+        border-radius: 999px;
+        padding: 3px 8px;
+        border: 1px solid var(--line);
+        background: #f8f6f2;
+        color: #453f35;
+      }
+
+      .pill.approved {
+        background: #eaf8ee;
+        border-color: #cfead7;
+        color: #1f5e33;
+      }
+
+      .pill.executed {
+        background: #eaf2ff;
+        border-color: #c8dafc;
+        color: #184083;
+      }
+
+      code {
+        background: #f4f1ea;
+        padding: 1px 5px;
+        border-radius: 6px;
+      }
+
+      .small {
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <h1>Cockpit do Agente ADS</h1>
+        <div class="sub">Converse com o agente, aprove acoes e confirme execucao com seguranca.</div>
+      </section>
+
+      <section class="grid">
+        <article class="card config">
+          <h3>Configuracao</h3>
+
+          <div class="row">
+            <label for="apiBase">API Base URL</label>
+            <input id="apiBase" value="http://localhost:4001/api" />
+          </div>
+
+          <div class="row">
+            <label for="apiKey">API Key (se configurada)</label>
+            <input id="apiKey" placeholder="INTERNAL_API_KEY" />
+          </div>
+
+          <div class="row">
+            <label for="shopId">Shop ID</label>
+            <input id="shopId" value="1005930564" />
+          </div>
+
+          <div class="row">
+            <label for="days">Janela (dias)</label>
+            <input id="days" type="number" min="1" max="60" value="14" />
+          </div>
+
+          <div class="actions-row">
+            <button id="btnTrain" class="btn-line">Treinar</button>
+            <button id="btnRecommend" class="btn-main">Recomendar</button>
+            <button id="btnLoadActions" class="btn-alt">Atualizar Acoes</button>
+          </div>
+
+          <div id="statusConfig" class="status">Pronto.</div>
+          <div class="small" style="margin-top: 8px;">Workflow ID esperado: <code id="workflowExpected"></code></div>
+        </article>
+
+        <article class="card chat">
+          <h3>Chat com Especialista ADS</h3>
+
+          <div id="chatLog" class="chat-log"></div>
+
+          <div class="row" style="margin-top: 10px;">
+            <label for="chatInput">Mensagem</label>
+            <textarea id="chatInput" rows="4" placeholder="Ex: Quais campanhas devo pausar hoje?"></textarea>
+          </div>
+
+          <div class="actions-row">
+            <button id="btnChat" class="btn-main">Enviar para o Agente</button>
+          </div>
+
+          <div id="statusChat" class="status">Sem mensagens ainda.</div>
+        </article>
+
+        <article class="card actions">
+          <h3>Acoes Recomendadas</h3>
+          <div class="actions-row" style="margin-bottom:8px;">
+            <button id="btnApproveAllDraft" class="btn-line">Aprovar Todas Draft</button>
+          </div>
+          <div id="actionsList" class="list"></div>
+          <div id="statusActions" class="status">Carregue as acoes para iniciar.</div>
+        </article>
+
+        <!-- Confirmation Modal -->
+        <div id="execModal" style="display:none;position:fixed;inset:0;background:#00000055;z-index:9999;display:none;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:18px;padding:28px;max-width:440px;width:92%;box-shadow:0 20px 60px #0000002a;">
+            <h3 style="margin:0 0 12px;">Confirmar Execucao</h3>
+            <div id="execModalBody" style="line-height:1.5;color:#453f35;"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+              <button id="execModalCancel" class="btn-line">Cancelar</button>
+              <button id="execModalConfirm" class="btn-alt">Sim, Executar</button>
+            </div>
+          </div>
+        </div>
+
+        <article class="card exec">
+          <h3>Autorizacao de Execucao</h3>
+
+          <div class="row">
+            <label for="dryRun">Modo de execucao</label>
+            <select id="dryRun">
+              <option value="true" selected>Dry run (seguro)</option>
+              <option value="false">Execucao real</option>
+            </select>
+          </div>
+
+          <div class="actions-row">
+            <button id="btnOneClickExec" class="btn-main">Executar Acoes Aprovadas</button>
+          </div>
+
+          <div id="statusExec" class="status">Aprove acoes na lista e clique em Executar.</div>
+        </article>
+      </section>
+    </div>
+
+    <script>
+      const WORKFLOW_FALLBACK = 'wf_69e82ec55890819091cc88eb646196dd002b656f6ea3da9c';
+      document.getElementById('workflowExpected').textContent = WORKFLOW_FALLBACK;
+
+      const $ = (id) => document.getElementById(id);
+
+      function setStatus(id, text, ok = null) {
+        const el = $(id);
+        el.textContent = text;
+        el.classList.remove('ok', 'err');
+        if (ok === true) el.classList.add('ok');
+        if (ok === false) el.classList.add('err');
+      }
+
+      function getConfig() {
+        return {
+          apiBase: $('apiBase').value.trim().replace(/\/$/, ''),
+          apiKey: $('apiKey').value.trim(),
+          shopId: $('shopId').value.trim(),
+          days: Number($('days').value || 14),
+        };
+      }
+
+      async function apiCall(path, method = 'GET', body) {
+        const cfg = getConfig();
+        if (!cfg.shopId) {
+          throw new Error('shop_id e obrigatorio');
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (cfg.apiKey) {
+          headers['x-api-key'] = cfg.apiKey;
+        }
+
+        const res = await fetch(cfg.apiBase + path, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (_e) {
+          data = { ok: false, message: 'Resposta invalida da API' };
+        }
+
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.message || 'Falha na requisicao');
+        }
+
+        return data.data;
+      }
+
+      function appendChat(role, text) {
+        const box = $('chatLog');
+        const item = document.createElement('div');
+        item.className = 'msg ' + role;
+        item.textContent = text;
+        box.appendChild(item);
+        box.scrollTop = box.scrollHeight;
+      }
+
+      function renderActions(actions) {
+        const list = $('actionsList');
+        list.innerHTML = '';
+
+        if (!actions.length) {
+          const empty = document.createElement('div');
+          empty.className = 'action-item';
+          empty.textContent = 'Nenhuma acao encontrada para os filtros atuais.';
+          list.appendChild(empty);
+          return;
+        }
+
+        actions.forEach((action) => {
+          const item = document.createElement('div');
+          item.className = 'action-item';
+
+          const st = String(action.status || 'draft');
+          const reason = action.reason || 'Sem justificativa';
+
+          const canApprove = st === 'draft';
+          const canExecSingle = st === 'draft' || st === 'approved';
+          const canDelete = st !== 'executed';
+
+          item.innerHTML = `
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+              <strong>#${action.id} ${action.action_type || 'acao'}</strong>
+              <span class="pill ${st}">${st}</span>
+            </div>
+            <div style="margin-top:6px;">Campanha: <code>${action.campaign_id || '-'}</code></div>
+            <div style="margin-top:4px;">Nome: ${action.campaign_name || '—'}</div>
+            <div style="margin-top:6px;">Motivo: ${reason}</div>
+            <div class="small" style="margin-top:6px;">Confianca: ${action.confidence ?? '-'}</div>
+            <div class="actions-row" style="margin-top:8px;">
+              <button class="btn-line" data-approve="${action.id}" ${canApprove ? '' : 'disabled'}>Aprovar</button>
+              <button class="btn-alt" data-exec-single="${action.id}" ${canExecSingle ? '' : 'disabled'}>Executar so esta</button>
+              <button class="btn-line" data-delete="${action.id}" style="color:#b00020;border-color:#f2b8c6;" ${canDelete ? '' : 'disabled'}>Excluir</button>
+            </div>
+          `;
+
+          list.appendChild(item);
+        });
+
+        list.querySelectorAll('button[data-approve]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-approve');
+            try {
+              btn.disabled = true;
+              const data = await apiCall(`/ads-agent/actions/${id}/approve`, 'POST');
+              setStatus('statusActions', `Acao #${data.id} aprovada.`, true);
+              await loadActions();
+            } catch (error) {
+              setStatus('statusActions', error.message, false);
+              btn.disabled = false;
+            }
+          });
+        });
+
+        list.querySelectorAll('button[data-exec-single]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-exec-single');
+            const cfg = getConfig();
+            const dryRun = $('dryRun').value !== 'false';
+            const mode = dryRun ? 'DRY RUN' : 'EXECUCAO REAL';
+            openExecModal(
+              `<p>Modo: <strong>${mode}</strong></p><p>Executar somente a acao <strong>#${id}</strong>?</p>`,
+              async () => {
+                try {
+                  btn.disabled = true;
+                  setStatus('statusActions', `Executando acao #${id}...`, null);
+                  const data = await apiCall(`/ads-agent/actions/${id}/execute-single`, 'POST', {
+                    shop_id: cfg.shopId,
+                    dry_run: dryRun,
+                  });
+                  setStatus('statusActions', `Acao #${id} executada. dry_run=${data.dry_run}`, true);
+                  await loadActions();
+                } catch (error) {
+                  setStatus('statusActions', error.message, false);
+                  btn.disabled = false;
+                }
+              }
+            );
+          });
+        });
+
+        list.querySelectorAll('button[data-delete]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-delete');
+            openExecModal(
+              `<p>Excluir permanentemente a acao <strong>#${id}</strong>?</p><p style="color:#6d6559;font-size:0.88rem;">Esta operacao nao pode ser desfeita.</p>`,
+              async () => {
+                try {
+                  btn.disabled = true;
+                  await apiCall(`/ads-agent/actions/${id}`, 'DELETE');
+                  setStatus('statusActions', `Acao #${id} excluida.`, true);
+                  await loadActions();
+                } catch (error) {
+                  setStatus('statusActions', error.message, false);
+                  btn.disabled = false;
+                }
+              }
+            );
+          });
+        });
+      }
+
+      async function loadActions() {
+        const cfg = getConfig();
+        const actions = await apiCall(`/ads-agent/actions?shop_id=${encodeURIComponent(cfg.shopId)}&status=all&limit=100`);
+        renderActions(actions || []);
+        setStatus('statusActions', `${(actions || []).length} acoes carregadas.`, true);
+      }
+
+      $('btnTrain').addEventListener('click', async () => {
+        try {
+          const cfg = getConfig();
+          setStatus('statusConfig', 'Treinando agente...', null);
+          const data = await apiCall('/ads-agent/train', 'POST', {
+            shop_id: cfg.shopId,
+            days: cfg.days,
+          });
+          setStatus(
+            'statusConfig',
+            `Treino concluido. campanhas=${data.campaigns_count}, workflow=${data.workflow_id || '-'} `,
+            true
+          );
+        } catch (error) {
+          setStatus('statusConfig', error.message, false);
+        }
+      });
+
+      $('btnRecommend').addEventListener('click', async () => {
+        try {
+          const cfg = getConfig();
+          setStatus('statusConfig', 'Gerando recomendacoes...', null);
+          const data = await apiCall('/ads-agent/recommend', 'POST', {
+            shop_id: cfg.shopId,
+            days: cfg.days,
+            sync_before: true,
+          });
+          setStatus(
+            'statusConfig',
+            `Recomendacoes prontas. acoes=${data.actions_count}, workflow=${data.workflow_id || '-'} `,
+            true
+          );
+          await loadActions();
+        } catch (error) {
+          setStatus('statusConfig', error.message, false);
+        }
+      });
+
+      $('btnLoadActions').addEventListener('click', async () => {
+        try {
+          setStatus('statusActions', 'Atualizando lista...', null);
+          await loadActions();
+        } catch (error) {
+          setStatus('statusActions', error.message, false);
+        }
+      });
+
+      let _pendingExecToken = null;
+      let _pendingExecCode = null;
+
+      function openExecModal(body, onConfirm) {
+        $('execModalBody').innerHTML = body;
+        const modal = $('execModal');
+        modal.style.display = 'flex';
+
+        const cleanup = () => {
+          modal.style.display = 'none';
+          $('execModalConfirm').onclick = null;
+          $('execModalCancel').onclick = null;
+        };
+
+        $('execModalConfirm').onclick = () => { cleanup(); onConfirm(); };
+        $('execModalCancel').onclick = cleanup;
+      }
+
+      $('btnOneClickExec').addEventListener('click', async () => {
+        try {
+          const cfg = getConfig();
+          const dryRun = $('dryRun').value !== 'false';
+          setStatus('statusExec', 'Verificando acoes aprovadas...', null);
+
+          const prep = await apiCall('/ads-agent/actions/execute', 'POST', {
+            shop_id: cfg.shopId,
+            dry_run: dryRun,
+            limit: 50,
+          });
+
+          _pendingExecToken = prep.confirmation_token;
+          _pendingExecCode = prep.confirmation_code;
+
+          const mode = dryRun ? 'DRY RUN (simulacao, sem alteracoes reais)' : '<strong style="color:#b00020">EXECUCAO REAL na Shopee Ads</strong>';
+          const expires = prep.expires_at ? new Date(prep.expires_at).toLocaleTimeString('pt-BR') : '-';
+
+          openExecModal(
+            `<p>Modo: ${mode}</p><p><strong>${prep.approved_count} acao(es) aprovada(s)</strong> serao executadas.</p><p style="color:#6d6559;font-size:0.88rem;">Expira as ${expires}. Esta operacao nao pode ser desfeita.</p>`,
+            async () => {
+              try {
+                setStatus('statusExec', 'Executando...', null);
+                const result = await apiCall('/ads-agent/actions/execute/confirm', 'POST', {
+                  shop_id: cfg.shopId,
+                  confirmation_token: _pendingExecToken,
+                  confirmation_code: _pendingExecCode,
+                });
+                setStatus('statusExec', `Execucao finalizada. total=${result.count}, dry_run=${String(result.dry_run)}`, true);
+                await loadActions();
+              } catch (err) {
+                setStatus('statusExec', err.message, false);
+              }
+            }
+          );
+        } catch (error) {
+          setStatus('statusExec', error.message, false);
+        }
+      });
+
+      $('btnApproveAllDraft').addEventListener('click', async () => {
+        try {
+          const cfg = getConfig();
+          setStatus('statusActions', 'Aprovando todas as acoes draft...', null);
+          const actions = await apiCall(`/ads-agent/actions?shop_id=${encodeURIComponent(cfg.shopId)}&status=draft&limit=200`);
+          const drafts = (actions || []).filter((a) => a.status === 'draft');
+          if (!drafts.length) {
+            setStatus('statusActions', 'Nenhuma acao draft encontrada.', null);
+            return;
+          }
+          for (const a of drafts) {
+            await apiCall(`/ads-agent/actions/${a.id}/approve`, 'POST');
+          }
+          setStatus('statusActions', `${drafts.length} acao(es) aprovada(s).`, true);
+          await loadActions();
+        } catch (error) {
+          setStatus('statusActions', error.message, false);
+        }
+      });
+
+      $('btnChat').addEventListener('click', async () => {
+        try {
+          const cfg = getConfig();
+          const message = $('chatInput').value.trim();
+          if (!message) throw new Error('Digite uma pergunta para o agente.');
+
+          appendChat('user', message);
+          $('chatInput').value = '';
+          setStatus('statusChat', 'Consultando agente...', null);
+
+          const data = await apiCall('/ads-agent/chat', 'POST', {
+            shop_id: cfg.shopId,
+            days: cfg.days,
+            message,
+          });
+
+          const answer =
+            data?.answer?.text || data?.answer?.fallback || data?.answer?.message || JSON.stringify(data?.answer || {});
+
+          appendChat('agent', answer);
+          setStatus('statusChat', `Resposta recebida. workflow=${data.workflow_id || '-'}`, true);
+
+          // Auto-generate actions after chat response
+          setStatus('statusActions', 'Gerando recomendações...', null);
+          $('btnRecommend').disabled = true;
+          
+          try {
+            await apiCall('/ads-agent/recommend', 'POST', {
+              shop_id: cfg.shopId,
+              days: cfg.days,
+            });
+            setStatus('statusActions', 'Recomendações prontas. Carregando...', null);
+            await loadActions();
+          } catch (recError) {
+            console.warn('Falha ao gerar recomendações automáticas:', recError);
+            setStatus('statusActions', 'Erro ao gerar recomendações: ' + recError.message, false);
+          } finally {
+            $('btnRecommend').disabled = false;
+          }
+        } catch (error) {
+          setStatus('statusChat', error.message, false);
+        }
+      });
+
+      // Initial load for a better first impression.
+      loadActions().catch((error) => {
+        setStatus('statusActions', error.message, false);
+      });
+    </script>
+  </body>
+</html>
