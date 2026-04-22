@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node src/app.js",
     "auth:url": "node shopee-auth.js",
     "auth:callback": "node shopee-callback-server.js",
     "start:api": "node src/app.js",
